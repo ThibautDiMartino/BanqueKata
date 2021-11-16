@@ -3,6 +3,7 @@ const cors = require('cors');
 const bodyParser = require('body-parser');
 const { depositValidation, withdrawalValidation } = require('./validation');
 var fs = require('fs');
+const { validationResult } = require('express-validator');
 
 const port = process.env.port || 3000;
 const app = express();
@@ -20,10 +21,17 @@ app.listen(port, () => {
 });
 
 app.post('/deposit', depositValidation, (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+        return res.status(400).json({ errors: errors.array() });
+    }
     fs.readFile('accounts.json', 'utf8', function (err, data) {
         if (err) {
-            console.err(`Error reading account: ${err}`);
-            res.send(`Deposit failure: ${err}`);
+            res.status(409).json({
+                method: "Deposit",
+                status: "Failure",
+                error: "Account retrieval failed"
+            });
         } else {
             const currentData = JSON.parse(data);
             let bankingHistory = currentData.history;
@@ -41,25 +49,43 @@ app.post('/deposit', depositValidation, (req, res) => {
             }
             fs.writeFile('./accounts.json', JSON.stringify(newData), 'utf8', (err) => {
                 if (err) {
-                    console.err(`Error writing file: ${err}`);
-                } else {
-                    console.log(`File is written successfully!`);
+                    res.status(409).json({
+                        method: "Deposit",
+                        status: "Failure",
+                        error: "Account update failed"
+                    });
                 }
             });
-            res.send(`Deposit successful: amount = ${req.body.amount}, new balance = ${balance}`);
+            res.status(200).json({
+                method: "Deposit",
+                status: "Success",
+                amount: req.body.amount,
+                newBalance: balance
+            });
         }
     });
 });
 
 app.post('/withdrawal', withdrawalValidation, (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+        return res.status(400).json({ errors: errors.array() });
+    }
     fs.readFile('accounts.json', 'utf8', function (err, data) {
-        if (err || isNaN(req.body.amount)) {
-            console.err(`Error reading account: ${err}`);
-            res.send(`Account retrieval failure: ${err}`);
+        if (err) {
+            res.status(409).json({
+                method: "Withdrawal",
+                status: "Failure",
+                error: "Account retrieval failed"
+            });
         } else {
             const currentData = JSON.parse(data);
             if (req.body.amount > currentData.balance) {
-                res.send(`Withdrawal failure: insufficient founds.`);
+                res.status(202).json({
+                    method: "Withdrawal",
+                    status: "Aborted",
+                    error: "Not enough founds"
+                });
             } else {
                 let bankingHistory = currentData.history;
                 const balance = currentData.balance - req.body.amount;
@@ -76,12 +102,19 @@ app.post('/withdrawal', withdrawalValidation, (req, res) => {
                 }
                 fs.writeFile('./accounts.json', JSON.stringify(newData), 'utf8', (err) => {
                     if (err) {
-                        console.err(`Error writing file: ${err}`);
-                    } else {
-                        console.log(`Account updated successfully!`);
+                        res.status(409).json({
+                            method: "Withdrawal",
+                            status: "Failure",
+                            error: "Account update failed"
+                        });
                     }
                 });
-                res.send(`Withdrawal successful: amount = ${req.body.amount}, new balance = ${balance}`);
+                res.status(200).json({
+                    method: "Withdrawal",
+                    status: "Success",
+                    amount: req.body.amount,
+                    newBalance: balance
+                });
             }
         }
     });
@@ -90,10 +123,14 @@ app.post('/withdrawal', withdrawalValidation, (req, res) => {
 app.get('/history', (req, res) => {
     fs.readFile('accounts.json', 'utf8', function (err, data) {
         if (err) {
-            console.err(`Error reading account: ${err}`);
+            res.status(409).json({
+                method: "Withdrawal",
+                status: "Failure",
+                error: "Account retrieval failed"
+            });
         } else {
             let banking = JSON.parse(data);
-            res.send(banking.history);
+            res.status(200).send(banking.history);
         }
     });
 });

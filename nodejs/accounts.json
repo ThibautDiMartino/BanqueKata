@@ -1,1 +1,35 @@
-{"balance":1230,"history":[{"action":"deposit","amount":100,"balance":1226,"date":1636457533643},{"action":"deposit","amount":4,"balance":1230,"date":1636459343950},{"action":"deposit","amount":4,"balance":1234,"date":1636459535187},{"action":"withdrawal","amount":4,"balance":1230,"date":1636460555711}]}
+{
+    "balance": "1190",
+    "history": [
+        {
+            "action": "deposit",
+            "amount": 100,
+            "balance": 1226,
+            "date": 1636457533643
+        },
+        {
+            "action": "deposit",
+            "amount": 4,
+            "balance": 1230,
+            "date": 1636459343950
+        },
+        {
+            "action": "deposit",
+            "amount": 4,
+            "balance": 1234,
+            "date": 1636459535187
+        },
+        {
+            "action": "withdrawal",
+            "amount": 4,
+            "balance": 1230,
+            "date": 1636460555711
+        },
+        {
+            "action": "withdrawal",
+            "amount": 40,
+            "balance": 1190,
+            "date": 1637063206129
+        }
+    ]
+}
